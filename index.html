@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UnmixOptimizer</title>
+    <link rel="stylesheet" href="src/styles.css">
+</head>
+<body>
+    <div>
+        <h1>Unmixing Matrix Optimizer</h1>
+        <p>This website is designed to correct the unmixing matrix using single color control samples for flow cytometry analysis. </p>
+        <p>If you find it helpful, please remember to cite us in your work. </p>
+    </div>
+    <!-- Step 1 Inital setting and Import files -->
+    <!-- Select  Data Folder and UnmixMatrix CSV file -->
+    <div>
+        <div>
+            <h2>Step 1 Setup</h2>
+            <p>Select a data folder where you keep fcs files</p>
+            <button id="select-folder">Select Data Folder</button>
+            <p id="folder-name"></p>
+            <p>Select a UnmixMatrix File</p>
+            <input type="file" id="file-input">
+            <p id="file-name"></p>
+            <!-- Read UnmixMatrix CSV file -->
+            <button id="read-csv">Read the UnmixMatrix CSV</button>
+        </div>
+        <div id="csv-table"></div>
+    </div>
+    
+    <div>
+        <!-- Select Positive signature -->
+        <p id="sccsig-dropdown-select-reminder" style="display:none;">Please select positive signature for correction</p>
+        <select id="csv-dropdown" style="display:none;"></select>
+        <p id="file-dropdown-select-alert" style="display:none;">Please select corresponding scc file</p>
+        <!-- Select scc fcs file for Positive signature -->
+        <select id="file-dropdown" style="display:none;"></select>
+        <p id="file-dropdown-name"></p>
+        <!-- Read fcs file and do unmixnig -->
+        <button id="run-button" style="display:none;">Read fcs file</button>
+        <p id="file-reading-reminder" style="display:none;">Pleas wait while reading and processing... </p>
+    </div>
+    
+
+    <!-- Step 2 Select positive and negative population -->
+    <div>
+        <h2>Step 2 Select shifted positive population and negative population</h2>
+        <button id="find-lefsig-button" style="display:none;">Find Leftover Siganature</button>
+        <!-- Select x and y axes -->
+        <p id="x-dropdown-select-reminder" style="display:none;">Select x axis</p>
+        <select id="x-dropdown" style="display:none;"></select>
+        <p id="y-dropdown-select-reminder" style="display:none;">Select y axis</p>
+        <select id="y-dropdown" style="display:none;"></select>
+        <!-- Create Scatter plot -->
+        <button id="plot-button" style="display:none;">Create Scatter plot</button>
+        <button id="replot-button" style="display:none;">Re-plot with selected cells</button>
+        <p id="plot-reminder" style="display:none;"></p>
+        <div id="plot"></div>
+        <p id="selected-reminder" style="display:none;"></p>
+        <!-- Select positive and negative population -->
+        <button id="set-positive-button" style="display:none;">Set selected cells as shifted posotive population</button>
+        <p id="set-positive-reminder" style="display:none;"></p>
+        <button id="set-negative-button" style="display:none;">Set selected cells as negative population</button>
+        <p id="set-negative-reminder" style="display:none;"></p>
+    </div>
+    
+    <br>
+
+    <!-- Step 3 Correction -->
+    <div>
+        <h2>Step 3 Correct unmixing matrix</h2>
+        <!-- Calculate Leftsig -->
+        <button id="calculation-button" style="display:none;">Correct when you are ready!</button>
+        <p id="calculation-button-reminder" style="display:none;"></p>
+
+        <!-- Correct positive signature -->
+        <div id="input-container" style="display: none;">
+            <label for="correct-factor-input">Enter Correct Factor:</label>
+            <input type="number" id="correct-factor-input" step="0.0001">
+            <button id="submit-factor-button">Submit</button>
+        </div>
+        <!-- Display corrected results -->
+        <p id="corrected-x-dropdown-select-reminder" style="display:none;">Select x axis</p>
+        <select id="corrected-x-dropdown" style="display:none;"></select>
+        <p id="corrected-y-dropdown-select-reminder" style="display:none;">Select y axis</p>
+        <select id="corrected-y-dropdown" style="display:none;"></select>
+
+        <button id="corrected-plot-button" style="display:none;">Create Corrected Scatter plot</button>
+        <button id="corrected-replot-button" style="display:none;">Re-plot with selected cells</button>
+        <p id="corrected-plot-reminder" style="display:none;"></p>
+        <div id="corrected-plot"></div>
+        <p id="corrected-selected-reminder" style="display:none;"></p>
+        
+
+        <div id="plotly-linechart"></div>
+    </div>
+    <br>
+    <!-- Step 4 Save corrected Unmixing matrix -->
+    <div>
+        <h2>Step 4 Save corrected Unmixing matrix</h2>
+        <button id="save-button" style="display: none;">Save Corrected Unmixing matrix</button>
+    </div>
+
+
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+
+    <footer>
+        <p>&copy; 2025 XiangmingCai. All rights reserved.</p>
+    </footer>
+    <script src="dist/bundle.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    
+</body>
+</html>
