@@ -1,4 +1,4 @@
-# UnmixingOptimizer.github.io
+# Unmixing Optimizer
 
 This website is designed to correct the unmixing matrix using single color control samples for flow cytometry analysis.
 
