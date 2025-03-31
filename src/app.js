@@ -1,7 +1,9 @@
 
 import FCS from '../node_modules/fcs/fcs.js';
 import Plotly from '../node_modules/plotly.js-dist';
-import { pinv,multiply,transpose,abs,sign,log10,add,dotMultiply,matrix,median,subtract } from '../node_modules/mathjs';
+import { pinv,multiply,transpose,abs,sign,log10,add,dotMultiply,matrix,median,subtract,exp,sqrt } from '../node_modules/mathjs';
+import seedrandom from '../node_modules/seedrandom';
+
 
 let directoryHandle;
 let UnmixfileHandle;
@@ -23,6 +25,8 @@ let fcsArray = [];
 let fcs;
 let fcsColumnNames = [];
 let fcsArrayPlotset = [];
+let PlotCellSize;
+let PlotCellSize_default = 10000;
 let x_val = '';
 let y_val = '';
 
@@ -200,8 +204,6 @@ function PosSigDropdown(data) {
     });
 }
 
-
-
 // Show Dropdown to select scc fcs file for positive signature
 async function populateFileDropdown(directoryHandle) {
     const fileDropdown = document.getElementById('file-dropdown');
@@ -306,6 +308,11 @@ document.getElementById('find-lefsig-button').addEventListener('click', () => {
     populateColumnDropdowns('corrected-x-dropdown',fcsColumnNames);
     populateColumnDropdowns('corrected-y-dropdown',fcsColumnNames);
 
+    document.getElementById('plotset-size-input-reminder').style.display = 'block';
+    document.getElementById('plotset-size-input-reminder').innerText = "The input fcs file has " + fcsArray.length + " cells. Please the cell size for plot."
+    document.getElementById('plotset-size-input').style.display = 'block';
+    document.getElementById('plotset-size-input').value = PlotCellSize_default;
+
     document.getElementById('x-dropdown').style.display = 'block';
     document.getElementById('x-dropdown-select-reminder').style.display = 'block';
     document.getElementById('y-dropdown').style.display = 'block';
@@ -337,26 +344,28 @@ document.getElementById('y-dropdown').addEventListener('change', function(event)
 });
 
 // Create scatter plot
-function getRandomSubset(array, size) {
+
+function getRandomSubset(array, size, seed) {
+    const random = seedrandom(seed);
     const shuffled = array.slice(0);
     let i = array.length;
     let min = i - size;
     let temp, index;
-  
+
     while (i-- > min) {
-        index = Math.floor((i + 1) * Math.random());
+        index = Math.floor((i + 1) * random());
         temp = shuffled[index];
         shuffled[index] = shuffled[i];
         shuffled[i] = temp;
     }
-  
+
     return shuffled.slice(min);
 }
 
-function generatePlotSubset(fcsArrayInput){
+function generatePlotSubset(fcsArrayInput,PlotCellSize){
     var Plotset
-    if (fcsArrayInput.length > 10000) {
-        Plotset = getRandomSubset(fcsArrayInput, 10000);
+    if (fcsArrayInput.length > PlotCellSize) {
+        Plotset = getRandomSubset(fcsArrayInput, PlotCellSize, 123);
     } else if (fcsArray.length == 0){
         console.error('fcsArrayInput is empty');
     } else {
@@ -378,17 +387,34 @@ function createPlotset(fcsArrayPlotset,x_val,y_val,fcsColumnNames) {
     //scale
     xData = dotMultiply(sign(xData),log10(add(abs(xData),1)))
     yData = dotMultiply(sign(yData),log10(add(abs(yData),1)))
-    const trace = {
+
+    const data = [];
+    for (let i = 0; i < xData.length; i++) {
+        data.push([xData[i], yData[i]]);
+    }
+    const kde = new KernelDensityEstimator(data);
+    const density = kde.estimateDensity();
+
+    var trace = {
         x: xData,
         y: yData,
         mode: 'markers',
-        type: 'scatter'
+        type: 'scatter',
+        marker: {
+            size: 6,
+            color: density,
+            colorscale: 'Viridis',
+            showscale: true,
+            colorbar: {
+                title: 'Density'
+            }
+        }
     };
 
-    const layout = {
-        title: 'Scatter Plot',
-        xaxis: { title: x_val + " (log10)"},
-        yaxis: { title: y_val + " (log10)"},
+    var layout = {
+        title: {text: 'Scatter Plot (Raw)'},
+        xaxis: { title: {text: x_val + " (log10)"}},
+        yaxis: { title: {text: y_val + " (log10)"}},
         dragmode: 'select' // Enable selection mode
     };
     document.getElementById('plot-reminder').style.display = 'block';
@@ -412,8 +438,35 @@ function createPlotset(fcsArrayPlotset,x_val,y_val,fcsColumnNames) {
     });
 }
 
+class KernelDensityEstimator {
+    constructor(data) {
+        this.data = data;
+    }
+
+    estimateDensity() {
+        const density = [];
+        for (let i = 0; i < this.data.length; i++) {
+            let sum = 0;
+            for (let j = 0; j < this.data.length; j++) {
+                sum += this.kernel(this.distance(this.data[i], this.data[j]));
+            }
+            density.push(sum / this.data.length);
+        }
+        return density;
+    }
+
+    kernel(distance) {
+        return exp(-0.5 * distance * distance) / sqrt(2 * Math.PI);
+    }
+
+    distance(point1, point2) {
+        return sqrt((point1[0] - point2[0]) ** 2 + (point1[1] - point2[1]) ** 2);
+    }
+}
+
 document.getElementById('plot-button').addEventListener('click', async () => {
-    fcsArrayPlotset = generatePlotSubset(fcsArray)
+    PlotCellSize = document.getElementById('plotset-size-input').value
+    fcsArrayPlotset = generatePlotSubset(fcsArray,PlotCellSize)
     createPlotset(fcsArrayPlotset,x_val,y_val,fcsColumnNames);
     document.getElementById('replot-button').style.display = 'block';
     document.getElementById('set-positive-button').style.display = 'block';
@@ -525,6 +578,7 @@ document.getElementById('corrected-y-dropdown').addEventListener('change', funct
     
 });
 
+// Do unmix with A_pinv_corrected 
 function UnmixCorrected(fcsArraySubset,fcsColumnNames,ChannelNames,A_pinv_corrected,PSValueList){
     //filter fcsArray
     var filteredfcsArrayforUnmix = filterFCSArrayByChannelNames(fcsArraySubset, fcsColumnNames, ChannelNames);
@@ -545,7 +599,7 @@ function UnmixCorrected(fcsArraySubset,fcsColumnNames,ChannelNames,A_pinv_correc
     return fcsArraySubset
 }
 
-
+// Correct A_Array
 function A_Array_corrected_calculater(A_Array,LefSig,CorrectFactor,PSValueList,selectedPSValue) {
     const selectedColIndex = PSValueList.indexOf(selectedPSValue);
     console.log('selectedColIndex: ',selectedColIndex);
@@ -560,6 +614,7 @@ function A_Array_corrected_calculater(A_Array,LefSig,CorrectFactor,PSValueList,s
     return A_Array_corrected;
 }
 
+// Calcualte LefSig
 function LefSigCalculater(positivefcsArray,negativefcsArray,fcsColumnNames,PSValueList,selectedPSValue,A_Array) {
     //filter positivefcsArray and negativefcsArray with PSValueList
     const selectedIndices = PSValueList.map(value => fcsColumnNames.indexOf(value)).filter(index => index !== -1);
@@ -605,13 +660,14 @@ document.getElementById('corrected-plot-button').addEventListener('click', () =>
     createCorrectedPlotset(fcsArrayPlotset_corrected,x_val_corrected,y_val_corrected,fcsColumnNames);
     document.getElementById('corrected-replot-button').style.display = 'block';
     // plot line chart
-    PlotLoneChart(RawSig,LefSig,CorrectFactor,ChannelNames);
+    PlotLoneChart(RawSig,LefSig,CorrectFactor,ChannelNames,selectedPSValue);
     // show save button
     csvArray_Output = replaceArrayColumns(csvArray, A_Array_corrected);
     console.log('csvArray_Output: ',csvArray_Output);
     document.getElementById('save-button').style.display = 'block';
 });
 
+// Plot corrected scatter plot
 function createCorrectedPlotset(fcsArrayPlotset,x_val,y_val,fcsColumnNames) {
     console.log('fcsColumnNames: ',fcsColumnNames);
     const xIndex = fcsColumnNames.indexOf(x_val);
@@ -622,20 +678,37 @@ function createCorrectedPlotset(fcsArrayPlotset,x_val,y_val,fcsColumnNames) {
     }
     var xData = fcsArrayPlotset.map(row => row[xIndex]);
     var yData = fcsArrayPlotset.map(row => row[yIndex]);
-    //scale
+    //scale data
     xData = dotMultiply(sign(xData),log10(add(abs(xData),1)))
     yData = dotMultiply(sign(yData),log10(add(abs(yData),1)))
-    const trace = {
+
+    const data = [];
+    for (let i = 0; i < xData.length; i++) {
+        data.push([xData[i], yData[i]]);
+    }
+    const kde = new KernelDensityEstimator(data);
+    const density = kde.estimateDensity();
+
+    var trace = {
         x: xData,
         y: yData,
         mode: 'markers',
-        type: 'scatter'
+        type: 'scatter',
+        marker: {
+            size: 6,
+            color: density,
+            colorscale: 'Viridis',
+            showscale: true,
+            colorbar: {
+                title: 'Density'
+            }
+        }
     };
 
     const layout = {
-        title: 'Scatter Plot',
-        xaxis: { title: x_val + " (log10)"},
-        yaxis: { title: y_val + " (log10)"},
+        title: { text: 'Scatter Plot (Corrected)'},
+        xaxis: { title: { text: x_val + " (log10)"}},
+        yaxis: { title: { text: y_val + " (log10)"}},
         dragmode: 'select' // Enable selection mode
     };
     document.getElementById('corrected-plot-reminder').style.display = 'block';
@@ -659,8 +732,8 @@ function createCorrectedPlotset(fcsArrayPlotset,x_val,y_val,fcsColumnNames) {
     });
 }
 
-
-function PlotLoneChart(RawSig,LefSig,CorrectFactor,ChannelNames) {
+// Plot line chart
+function PlotLoneChart(RawSig,LefSig,CorrectFactor,ChannelNames,selectedPSValue) {
     const LefSig_adjusted  = multiply(LefSig,CorrectFactor)
     const CorrectedSig = add(RawSig,LefSig_adjusted)
     // Plot the chart using Plotly
@@ -683,18 +756,20 @@ function PlotLoneChart(RawSig,LefSig,CorrectFactor,ChannelNames) {
     const data = [trace1, trace2];
 
     const layout = {
-        title: 'RawSig and CorrectedSig',
-        xaxis: { title: 'Channel Names' },
-        yaxis: { title: 'Values' }
+        title: {text: 'Line Plot for ' + selectedPSValue},
+        xaxis: { title: {text: 'Channels', standoff: 20} },
+        yaxis: { title: {text: 'Value'}  }
     };
 
     Plotly.newPlot('plotly-linechart', data, layout);
 }
-// Re-plot with selected population
+
+// Re-plot corrected scatter plot with selected population
 document.getElementById('corrected-replot-button').addEventListener('click', async () => {
     createCorrectedPlotset(selectedSubset_fcsArray_corrected,x_val_corrected,y_val_corrected,fcsColumnNames);
 }); 
 
+// Prepare Output csvArray
 function replaceArrayColumns(csvArray, A_Array_corrected) {
     // copy newArray from csvArray
     let twoDimArray = csvArray.map(obj => Object.values(obj));
@@ -713,7 +788,6 @@ function replaceArrayColumns(csvArray, A_Array_corrected) {
 
     return newArray;
 }
-
 
 document.getElementById('save-button').addEventListener('click', () => {
     
@@ -739,3 +813,4 @@ document.getElementById('save-button').addEventListener('click', () => {
     // Remove the link from the body
     document.body.removeChild(link);
 });
+

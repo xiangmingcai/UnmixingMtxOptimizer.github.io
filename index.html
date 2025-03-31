@@ -7,46 +7,54 @@
     <link rel="stylesheet" href="src/styles.css">
 </head>
 <body>
-    <div>
+    <div class="basic-div">
         <h1>Unmixing Matrix Optimizer</h1>
         <p>This website is designed to correct the unmixing matrix using single color control samples for flow cytometry analysis. </p>
-        <p>If you find it helpful, please remember to cite us in your work. </p>
+        <p>If you find it helpful, please remember to cite us in your work. <a href="https://github.com/xiangmingcai/UnmixingOptimizer.github.io" target="_blank">View this project on GitHub</a></p>
+        <p>Enjoy! 😉</p>
     </div>
     <!-- Step 1 Inital setting and Import files -->
     <!-- Select  Data Folder and UnmixMatrix CSV file -->
-    <div>
+    <div class="basic-div">
         <div>
             <h2>Step 1 Setup</h2>
             <p>Select a data folder where you keep fcs files</p>
             <button id="select-folder">Select Data Folder</button>
-            <p id="folder-name"></p>
+            <p id="folder-name" class = "small-gray-text"></p>
             <p>Select a UnmixMatrix File</p>
-            <input type="file" id="file-input">
-            <p id="file-name"></p>
+            <input type="file" id="file-input" >
+            <p id="file-name" class = "small-gray-text"></p>
             <!-- Read UnmixMatrix CSV file -->
             <button id="read-csv">Read the UnmixMatrix CSV</button>
         </div>
-        <div id="csv-table"></div>
-    </div>
-    
-    <div>
-        <!-- Select Positive signature -->
-        <p id="sccsig-dropdown-select-reminder" style="display:none;">Please select positive signature for correction</p>
-        <select id="csv-dropdown" style="display:none;"></select>
-        <p id="file-dropdown-select-alert" style="display:none;">Please select corresponding scc file</p>
-        <!-- Select scc fcs file for Positive signature -->
-        <select id="file-dropdown" style="display:none;"></select>
-        <p id="file-dropdown-name"></p>
-        <!-- Read fcs file and do unmixnig -->
-        <button id="run-button" style="display:none;">Read fcs file</button>
-        <p id="file-reading-reminder" style="display:none;">Pleas wait while reading and processing... </p>
+        <div class = "table-container">
+            <div id="csv-table"></div>
+        </div>
+        
+
+        <div>
+            <!-- Select Positive signature -->
+            <p id="sccsig-dropdown-select-reminder" style="display:none;">Please select positive signature for correction</p>
+            <select id="csv-dropdown" style="display:none;"></select>
+            <p id="file-dropdown-select-alert" style="display:none;">Please select corresponding scc file</p>
+            <!-- Select scc fcs file for Positive signature -->
+            <select id="file-dropdown" style="display:none;"></select>
+            <p id="file-dropdown-name" class = "small-gray-text"></p>
+            <!-- Read fcs file and do unmixnig -->
+            <button id="run-button" style="display:none;">Read fcs file</button>
+            <p id="file-reading-reminder" style="display:none;">Please wait while reading and processing... </p>
+        </div>
+
     </div>
     
 
     <!-- Step 2 Select positive and negative population -->
-    <div>
+    <div class="basic-div">
         <h2>Step 2 Select shifted positive population and negative population</h2>
         <button id="find-lefsig-button" style="display:none;">Find Leftover Siganature</button>
+        <!-- Select cell numbers for scatter plot -->
+        <p id="plotset-size-input-reminder" style="display:none;"></p>
+        <input type="number" id="plotset-size-input" placeholder="Enter Plotset size" style="display:none;">
         <!-- Select x and y axes -->
         <p id="x-dropdown-select-reminder" style="display:none;">Select x axis</p>
         <select id="x-dropdown" style="display:none;"></select>
@@ -57,22 +65,20 @@
         <button id="replot-button" style="display:none;">Re-plot with selected cells</button>
         <p id="plot-reminder" style="display:none;"></p>
         <div id="plot"></div>
-        <p id="selected-reminder" style="display:none;"></p>
+        <p id="selected-reminder" style="display:none;" ></p>
         <!-- Select positive and negative population -->
         <button id="set-positive-button" style="display:none;">Set selected cells as shifted posotive population</button>
-        <p id="set-positive-reminder" style="display:none;"></p>
+        <p id="set-positive-reminder" style="display:none;" class = "small-gray-text"></p>
         <button id="set-negative-button" style="display:none;">Set selected cells as negative population</button>
-        <p id="set-negative-reminder" style="display:none;"></p>
+        <p id="set-negative-reminder" style="display:none;" class = "small-gray-text"></p>
     </div>
     
-    <br>
-
     <!-- Step 3 Correction -->
-    <div>
+    <div class="basic-div">
         <h2>Step 3 Correct unmixing matrix</h2>
         <!-- Calculate Leftsig -->
         <button id="calculation-button" style="display:none;">Correct when you are ready!</button>
-        <p id="calculation-button-reminder" style="display:none;"></p>
+        <p id="calculation-button-reminder" style="display:none;" class = "small-gray-text"></p>
 
         <!-- Correct positive signature -->
         <div id="input-container" style="display: none;">
@@ -91,13 +97,11 @@
         <p id="corrected-plot-reminder" style="display:none;"></p>
         <div id="corrected-plot"></div>
         <p id="corrected-selected-reminder" style="display:none;"></p>
-        
-
         <div id="plotly-linechart"></div>
     </div>
-    <br>
+
     <!-- Step 4 Save corrected Unmixing matrix -->
-    <div>
+    <div class="basic-div">
         <h2>Step 4 Save corrected Unmixing matrix</h2>
         <button id="save-button" style="display: none;">Save Corrected Unmixing matrix</button>
     </div>
