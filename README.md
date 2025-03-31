@@ -6,6 +6,8 @@ If you find it helpful, please remember to cite us in your work.
 
 Enjoy! 😉
 
+link to the web: https://xiangmingcai.github.io/UnmixingOptimizer.github.io/
+
 - **author  : Xiangming Cai**
 - **email   : x.cai@amsterdamumc.nl**
 - **time    : 2025/4/1**
