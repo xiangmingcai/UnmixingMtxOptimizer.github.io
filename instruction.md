@@ -1,6 +1,10 @@
 
 
 # Unmixing Matrix Optimizer (UMO)
+
+Xiangming Cai   
+2025 April 1
+
 Welcome to the Unmixing Matrix Optimizer, your go-to tool for correcting the unmixing matrix in flow cytometry analysis. This guide will help you understand how to use the tool.
 
 Visit the project in [Github](https://github.com/xiangmingcai/UnmixingOptimizer.github.io).
