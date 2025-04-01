@@ -11,4 +11,4 @@ link to the webpage: https://xiangmingcai.github.io/UnmixingOptimizer.github.io/
 - **author  : Xiangming Cai**
 - **email   : x.cai@amsterdamumc.nl**
 - **time    : 2025/4/1**
-- **version: demo v0.2**
+- **version: demo v0.3**
