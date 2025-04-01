@@ -24,6 +24,8 @@ let SCCfileHandle;
 let fcsArray = [];
 let fcsColumnNames = [];
 let fcsArrayPlotset = [];
+let SubsetMethod;
+let SubsetSize;
 let PlotCellSize;
 let PlotCellSize_default = 30000;
 let x_val = '';
@@ -189,6 +191,7 @@ function PosSigDropdown(data) {
     populateFileDropdown(directoryHandle);
     document.getElementById('file-dropdown-select-alert').style.display = 'block';
     document.getElementById('file-dropdown').style.display = 'block';
+    selectedRowIndex = document.getElementById('file-dropdown').value
 
     dropdown.addEventListener('change', (event) => {
         selectedRowIndex = event.target.value;
@@ -225,6 +228,7 @@ async function populateFileDropdown(directoryHandle) {
                 SCCfileHandle = entry;
                 document.getElementById('file-dropdown-name').textContent = `Selected File: ${SCCfileHandle.name}`;
                 document.getElementById('run-button').style.display = 'block';
+                document.getElementById('subset-method-selection').style.display = 'block';
                 break;
             }
         }
@@ -232,44 +236,113 @@ async function populateFileDropdown(directoryHandle) {
 }
 
 // Read selected scc fcs file
+function findMaxColumnIndex(A_Array, selectedRowIndex) {
+    console.log('selectedRowIndex:', selectedRowIndex);
+    const A_Array_t = transpose(A_Array)
+    const row = A_Array_t[selectedRowIndex];
+    console.log('A_Array[selectedRowIndex]:', row);
+    let maxIndex = 0;
+    let maxValue = row[0];
+
+    for (let i = 1; i < row.length; i++) {
+        if (row[i] > maxValue) {
+            maxValue = row[i];
+            maxIndex = i;
+        }
+    }
+
+    return maxIndex;
+}
+
+function filterTopRows(fcsArray, fcsColumnNames, channelName, topN) {
+    const columnIndex = fcsColumnNames.indexOf(channelName);
+    const columnValues = fcsArray.map(row => row[columnIndex]);
+
+    const topIndices = columnValues
+        .map((value, index) => ({ value, index }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, topN)
+        .map(item => item.index);
+
+    const filteredRows = topIndices.map(index => fcsArray[index]);
+    
+    return filteredRows;
+}
+
 async function readFCSFile() {
     //show file-reading-reminder
-    document.getElementById('file-reading-reminder').style.display = 'block';
+    document.getElementById('file-reading-reminder-div').style.display = 'block';
     if (SCCfileHandle) {
         const file = await SCCfileHandle.getFile();
         const reader = new FileReader();
         reader.onload = function(e) {
+            SubsetMethod = document.querySelector('input[name="subset-method"]:checked').value;
+            //find max channel
+            let maxColumnIndex = findMaxColumnIndex(A_Array, selectedRowIndex);
+            let max_ChannelName = ChannelNames[maxColumnIndex]
+            console.log("max_ChannelName: ", max_ChannelName); 
+            
+            //import fcs file
+            document.getElementById('file-reading-reminder-progress').innerText = '>---- import fcs file';
             let arrayBuffer = e.target.result;
             console.log("arrayBuffer: ", arrayBuffer); 
+            
             let buffer = Buffer.from(arrayBuffer);
-            arrayBuffer = null
+            arrayBuffer = null //remove arrayBuffer
             console.log("buffer: ", buffer); 
+            
+            document.getElementById('file-reading-reminder-progress').innerText = '>>--- extract dataset';
             let fcs = new FCS({ dataFormat: 'asNumber', eventsToRead: -1}, buffer);
-            buffer = null
+            buffer = null //remove buffer
             console.log("fcs: ", fcs); 
-            // fcsArray
-            fcsArray = fcs.dataAsNumbers; 
+            
             // fcsColumnNames
             const text = fcs.text;
-            fcs = null
             const columnNames = [];
             for (let i = 1; text[`$P${i}S`]; i++) {
                 columnNames.push(text[`$P${i}S`]);
             }
             fcsColumnNames = columnNames;
+            
+            // fcsArray
+            fcsArray = fcs.dataAsNumbers; 
+            fcs = null; //remove fcs
             console.log("fcsArray: ",fcsArray); 
             console.log('Column Names:', fcsColumnNames);
-            //check fcs size
-            if (fcsArray.length>100000){
-                fcsArray = generateSubset(fcsArray,100000)
-                document.getElementById('file-reading-worrying').style.display = 'block';
-                document.getElementById('file-reading-worrying').innerText = 'Note: the fcs file has too many cells, only 100000 cells are imported';
+            
+
+            //check fcs size and do subset
+            document.getElementById('file-reading-reminder-progress').innerText = '>>>-- subset dataset';
+            SubsetSize = parseInt(document.getElementById('subset-size').value, 10);
+            let full_fcsArraylength = fcsArray.length
+            if (full_fcsArraylength > SubsetSize){
+                if (SubsetMethod == "random") {
+                    fcsArray = generateSubset(fcsArray,SubsetSize)
+                }else if (SubsetMethod == "peak_channel") {
+                    let topN = SubsetSize
+                    fcsArray = filterTopRows(fcsArray, fcsColumnNames, max_ChannelName,topN );
+                }
+                document.getElementById('file-reading-worrying-div').style.display = 'block';
+                document.getElementById('file-reading-worrying1').innerText = 'Note: the fcs file has too many cells (' + full_fcsArraylength + '), only ' + SubsetSize + ' cells are imported';
+                document.getElementById('file-reading-worrying2').innerText = 'Subset method: ' + SubsetMethod;
+                document.getElementById('file-reading-worrying3').innerText = 'Subset size: ' + SubsetSize;
+                if(SubsetMethod == "peak_channel"){
+                    document.getElementById('file-reading-worrying4').innerText = 'Peak channel: ' + max_ChannelName;
+                }
+                document.getElementById('file-reading-worrying3').innerText = 'Subset size: ' + SubsetSize;
+            } else {
+                document.getElementById('file-reading-worrying-div').style.display = 'block';
+                document.getElementById('file-reading-worrying').innerText = 'Note: all cells (' + full_fcsArraylength + ') are imported';
             }
+            
             //filter fcsArray
+            document.getElementById('file-reading-reminder-progress').innerText = '>>>>- filter dataset';
             var filteredfcsArrayforUnmix = filterFCSArrayByChannelNames(fcsArray, fcsColumnNames, ChannelNames);
             filteredfcsArrayforUnmix = transpose(filteredfcsArrayforUnmix);
             console.log('Filtered FCS Array:', filteredfcsArrayforUnmix);
+            
             //Do unmixing
+            document.getElementById('file-reading-reminder-progress').innerText = '>>>>> unmixing';
             let unmixedMatrix = multiply(A_pinv, filteredfcsArrayforUnmix);
             unmixedMatrix = transpose(unmixedMatrix);
             console.log('unmixedMatrix:', unmixedMatrix);
@@ -278,7 +351,9 @@ async function readFCSFile() {
             console.log('Merged fcsArray:', fcsArray);
             fcsColumnNames = fcsColumnNames.concat(PSValueList)
             console.log('Merged fcsColumnNames:', fcsColumnNames);
+
             // change file-reading-reminder
+            document.getElementById('file-reading-reminder-progress').style.display = 'none';
             document.getElementById('file-reading-reminder').innerText = 'Done reading the scc file!';
             //show find-lefsig-button
             document.getElementById('find-lefsig-button').style.display = 'block';
@@ -679,7 +754,7 @@ document.getElementById('corrected-plot-button').addEventListener('click', () =>
     createCorrectedPlotset(fcsArrayPlotset_corrected,x_val_corrected,y_val_corrected,fcsColumnNames,enable_density_plot);
     document.getElementById('corrected-replot-button').style.display = 'block';
     // plot line chart
-    PlotLoneChart(RawSig,LefSig,CorrectFactor,ChannelNames,selectedPSValue);
+    PlotLineChart(RawSig,LefSig,CorrectFactor,ChannelNames,selectedPSValue);
     // show save button
     csvArray_Output = replaceArrayColumns(csvArray, A_Array_corrected);
     console.log('csvArray_Output: ',csvArray_Output);
@@ -765,7 +840,7 @@ function createCorrectedPlotset(fcsArrayPlotset,x_val,y_val,fcsColumnNames,enabl
 }
 
 // Plot line chart
-function PlotLoneChart(RawSig,LefSig,CorrectFactor,ChannelNames,selectedPSValue) {
+function PlotLineChart(RawSig,LefSig,CorrectFactor,ChannelNames,selectedPSValue) {
     const LefSig_adjusted  = multiply(LefSig,CorrectFactor)
     const CorrectedSig = add(RawSig,LefSig_adjusted)
     // Plot the chart using Plotly
@@ -788,9 +863,10 @@ function PlotLoneChart(RawSig,LefSig,CorrectFactor,ChannelNames,selectedPSValue)
     const data = [trace1, trace2];
 
     const layout = {
-        title: {text: 'Line Plot for ' + selectedPSValue},
-        xaxis: { title: {text: 'Channels', standoff: 20} },
-        yaxis: { title: {text: 'Value'}  }
+        title: {text: 'Spectrum for ' + selectedPSValue},
+        xaxis: { title: {text: 'Channels', pad: { t: 50 }} },
+        yaxis: { title: {text: 'Normalized Intensity'}  },
+        margin: { b: 100 } 
     };
 
     Plotly.newPlot('plotly-linechart', data, layout);
@@ -846,3 +922,4 @@ document.getElementById('save-button').addEventListener('click', () => {
     document.body.removeChild(link);
 });
 
+//npm run build

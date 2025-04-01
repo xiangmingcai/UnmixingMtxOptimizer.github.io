@@ -31,7 +31,6 @@
             <div id="csv-table"></div>
         </div>
         
-
         <div>
             <!-- Select Positive signature -->
             <p id="sccsig-dropdown-select-reminder" style="display:none;">Please select positive signature for correction</p>
@@ -40,10 +39,36 @@
             <!-- Select scc fcs file for Positive signature -->
             <select id="file-dropdown" style="display:none;"></select>
             <p id="file-dropdown-name" class = "small-gray-text"></p>
+            <!-- Select subset method -->
+            <div id="subset-method-selection" style="display:none;">
+                <div>
+                    <label>
+                        <input type="radio" name="subset-method" value="random" checked> Random Subset
+                    </label>
+                    <label>
+                        <input type="radio" name="subset-method" value="peak_channel"> Max Subset by peak channel
+                    </label>
+                </div>
+                <div>
+                    <p id="subset-size-reminder" >Enter subset size: </p>
+                    <input type="number" id="subset-size" value="50000" step="1" >
+                </div>
+            </div>
             <!-- Read fcs file and do unmixnig -->
             <button id="run-button" style="display:none;">Read fcs file</button>
-            <p id="file-reading-reminder" style="display:none;">Please wait while reading and processing... </p>
-            <p id="file-reading-worrying" style="display:none;">Please wait while reading and processing... </p>
+            <div id="file-reading-reminder-div" style="display:none;">
+                <p id="file-reading-reminder">Please wait while reading and processing... </p>
+                <p id="file-reading-reminder-progress"></p>
+            </div>
+            
+            <div id="file-reading-worrying-div" style="display:none;">
+                <p id="file-reading-worrying1"></p>
+                <p id="file-reading-worrying2"></p>
+                <p id="file-reading-worrying3"></p>
+                <p id="file-reading-worrying4"></p>
+            </div>
+            
+            
         </div>
 
     </div>
