@@ -22,11 +22,10 @@ let selectedRowIndex;
 
 let SCCfileHandle;
 let fcsArray = [];
-let fcs;
 let fcsColumnNames = [];
 let fcsArrayPlotset = [];
 let PlotCellSize;
-let PlotCellSize_default = 10000;
+let PlotCellSize_default = 30000;
 let x_val = '';
 let y_val = '';
 
@@ -47,7 +46,8 @@ let x_val_corrected = '';
 let y_val_corrected = '';
 let selectedSubset_fcsArray_corrected;
 
-let csvArray_Output
+let csvArray_Output;
+let enable_density_plot = false;
 
 // Select fcs Data folder
 document.getElementById('select-folder').addEventListener('click', async () => {
@@ -239,16 +239,19 @@ async function readFCSFile() {
         const file = await SCCfileHandle.getFile();
         const reader = new FileReader();
         reader.onload = function(e) {
-            const arrayBuffer = e.target.result;
+            let arrayBuffer = e.target.result;
             console.log("arrayBuffer: ", arrayBuffer); 
-            const buffer = Buffer.from(arrayBuffer);
+            let buffer = Buffer.from(arrayBuffer);
+            arrayBuffer = null
             console.log("buffer: ", buffer); 
-            fcs = new FCS({ dataFormat: 'asNumber', eventsToRead: -1}, buffer);
+            let fcs = new FCS({ dataFormat: 'asNumber', eventsToRead: -1}, buffer);
+            buffer = null
             console.log("fcs: ", fcs); 
             // fcsArray
             fcsArray = fcs.dataAsNumbers; 
             // fcsColumnNames
             const text = fcs.text;
+            fcs = null
             const columnNames = [];
             for (let i = 1; text[`$P${i}S`]; i++) {
                 columnNames.push(text[`$P${i}S`]);
@@ -256,6 +259,12 @@ async function readFCSFile() {
             fcsColumnNames = columnNames;
             console.log("fcsArray: ",fcsArray); 
             console.log('Column Names:', fcsColumnNames);
+            //check fcs size
+            if (fcsArray.length>100000){
+                fcsArray = generateSubset(fcsArray,100000)
+                document.getElementById('file-reading-worrying').style.display = 'block';
+                document.getElementById('file-reading-worrying').innerText = 'Note: the fcs file has too many cells, only 100000 cells are imported';
+            }
             //filter fcsArray
             var filteredfcsArrayforUnmix = filterFCSArrayByChannelNames(fcsArray, fcsColumnNames, ChannelNames);
             filteredfcsArrayforUnmix = transpose(filteredfcsArrayforUnmix);
@@ -362,7 +371,7 @@ function getRandomSubset(array, size, seed) {
     return shuffled.slice(min);
 }
 
-function generatePlotSubset(fcsArrayInput,PlotCellSize){
+function generateSubset(fcsArrayInput,PlotCellSize){
     var Plotset
     if (fcsArrayInput.length > PlotCellSize) {
         Plotset = getRandomSubset(fcsArrayInput, PlotCellSize, 123);
@@ -371,11 +380,11 @@ function generatePlotSubset(fcsArrayInput,PlotCellSize){
     } else {
         Plotset = fcsArrayInput
     }
-    console.log('Plotset Data:', Plotset); 
+    console.log('Subset Data:', Plotset); 
     return Plotset
 }
 
-function createPlotset(fcsArrayPlotset,x_val,y_val,fcsColumnNames) {
+function createPlotset(fcsArrayPlotset,x_val,y_val,fcsColumnNames,enable_density_plot) {
     const xIndex = fcsColumnNames.indexOf(x_val);
     const yIndex = fcsColumnNames.indexOf(y_val);
     if (xIndex === -1 || yIndex === -1) {
@@ -388,28 +397,38 @@ function createPlotset(fcsArrayPlotset,x_val,y_val,fcsColumnNames) {
     xData = dotMultiply(sign(xData),log10(add(abs(xData),1)))
     yData = dotMultiply(sign(yData),log10(add(abs(yData),1)))
 
-    const data = [];
-    for (let i = 0; i < xData.length; i++) {
-        data.push([xData[i], yData[i]]);
-    }
-    const kde = new KernelDensityEstimator(data);
-    const density = kde.estimateDensity();
-
-    var trace = {
-        x: xData,
-        y: yData,
-        mode: 'markers',
-        type: 'scatter',
-        marker: {
-            size: 6,
-            color: density,
-            colorscale: 'Viridis',
-            showscale: true,
-            colorbar: {
-                title: 'Density'
-            }
+    if (enable_density_plot) {
+        const data = [];
+        for (let i = 0; i < xData.length; i++) {
+            data.push([xData[i], yData[i]]);
         }
-    };
+        const kde = new KernelDensityEstimator(data);
+        const density = kde.estimateDensity();
+    
+        var trace = {
+            x: xData,
+            y: yData,
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+                size: 6,
+                color: density,
+                colorscale: 'Viridis',
+                showscale: true,
+                colorbar: {
+                    title: 'Density'
+                }
+            }
+        };
+    } else {
+        var trace = {
+            x: xData,
+            y: yData,
+            mode: 'markers',
+            type: 'scatter'
+            }
+    }
+    
 
     var layout = {
         title: {text: 'Scatter Plot (Raw)'},
@@ -466,8 +485,8 @@ class KernelDensityEstimator {
 
 document.getElementById('plot-button').addEventListener('click', async () => {
     PlotCellSize = document.getElementById('plotset-size-input').value
-    fcsArrayPlotset = generatePlotSubset(fcsArray,PlotCellSize)
-    createPlotset(fcsArrayPlotset,x_val,y_val,fcsColumnNames);
+    fcsArrayPlotset = generateSubset(fcsArray,PlotCellSize)
+    createPlotset(fcsArrayPlotset,x_val,y_val,fcsColumnNames,enable_density_plot);
     document.getElementById('replot-button').style.display = 'block';
     document.getElementById('set-positive-button').style.display = 'block';
     document.getElementById('set-negative-button').style.display = 'block';
@@ -476,7 +495,7 @@ document.getElementById('plot-button').addEventListener('click', async () => {
 
 // Re-plot with selected population
 document.getElementById('replot-button').addEventListener('click', async () => {
-    createPlotset(selectedSubset_fcsArray,x_val,y_val,fcsColumnNames);
+    createPlotset(selectedSubset_fcsArray,x_val,y_val,fcsColumnNames,enable_density_plot);
 }); 
 
 // set positive and negative population
@@ -657,7 +676,7 @@ function LefSigCalculater(positivefcsArray,negativefcsArray,fcsColumnNames,PSVal
 
 document.getElementById('corrected-plot-button').addEventListener('click', () => {
     // plot new scatter plot
-    createCorrectedPlotset(fcsArrayPlotset_corrected,x_val_corrected,y_val_corrected,fcsColumnNames);
+    createCorrectedPlotset(fcsArrayPlotset_corrected,x_val_corrected,y_val_corrected,fcsColumnNames,enable_density_plot);
     document.getElementById('corrected-replot-button').style.display = 'block';
     // plot line chart
     PlotLoneChart(RawSig,LefSig,CorrectFactor,ChannelNames,selectedPSValue);
@@ -668,7 +687,7 @@ document.getElementById('corrected-plot-button').addEventListener('click', () =>
 });
 
 // Plot corrected scatter plot
-function createCorrectedPlotset(fcsArrayPlotset,x_val,y_val,fcsColumnNames) {
+function createCorrectedPlotset(fcsArrayPlotset,x_val,y_val,fcsColumnNames,enable_density_plot) {
     console.log('fcsColumnNames: ',fcsColumnNames);
     const xIndex = fcsColumnNames.indexOf(x_val);
     const yIndex = fcsColumnNames.indexOf(y_val);
@@ -682,28 +701,41 @@ function createCorrectedPlotset(fcsArrayPlotset,x_val,y_val,fcsColumnNames) {
     xData = dotMultiply(sign(xData),log10(add(abs(xData),1)))
     yData = dotMultiply(sign(yData),log10(add(abs(yData),1)))
 
-    const data = [];
-    for (let i = 0; i < xData.length; i++) {
-        data.push([xData[i], yData[i]]);
-    }
-    const kde = new KernelDensityEstimator(data);
-    const density = kde.estimateDensity();
-
-    var trace = {
-        x: xData,
-        y: yData,
-        mode: 'markers',
-        type: 'scatter',
-        marker: {
-            size: 6,
-            color: density,
-            colorscale: 'Viridis',
-            showscale: true,
-            colorbar: {
-                title: 'Density'
-            }
+    if (enable_density_plot) {
+        const data = [];
+        for (let i = 0; i < xData.length; i++) {
+            data.push([xData[i], yData[i]]);
         }
-    };
+        const kde = new KernelDensityEstimator(data);
+        const density = kde.estimateDensity();
+
+        var trace = {
+            x: xData,
+            y: yData,
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+                size: 6,
+                color: density,
+                colorscale: 'Viridis',
+                showscale: true,
+                colorbar: {
+                    title: 'Density'
+                }
+            }
+        };
+    
+    } else {
+        var trace = {
+            x: xData,
+            y: yData,
+            mode: 'markers',
+            type: 'scatter'
+        };
+    }
+    
+
+    
 
     const layout = {
         title: { text: 'Scatter Plot (Corrected)'},
@@ -766,7 +798,7 @@ function PlotLoneChart(RawSig,LefSig,CorrectFactor,ChannelNames,selectedPSValue)
 
 // Re-plot corrected scatter plot with selected population
 document.getElementById('corrected-replot-button').addEventListener('click', async () => {
-    createCorrectedPlotset(selectedSubset_fcsArray_corrected,x_val_corrected,y_val_corrected,fcsColumnNames);
+    createCorrectedPlotset(selectedSubset_fcsArray_corrected,x_val_corrected,y_val_corrected,fcsColumnNames,enable_density_plot);
 }); 
 
 // Prepare Output csvArray
