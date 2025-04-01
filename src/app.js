@@ -4,6 +4,7 @@ import Plotly from '../node_modules/plotly.js-dist';
 import { pinv,multiply,transpose,abs,sign,log10,add,dotMultiply,matrix,median,subtract,exp,sqrt } from '../node_modules/mathjs';
 import seedrandom from '../node_modules/seedrandom';
 
+let logArray = [];
 
 let directoryHandle;
 let UnmixfileHandle;
@@ -65,6 +66,7 @@ document.getElementById('select-folder').addEventListener('click', async () => {
         
     } catch (error) {
         console.error('Error selecting folder:', error);
+        customLog('Error selecting folder:', error);
     }
 });
 
@@ -75,7 +77,9 @@ document.getElementById('file-input').addEventListener('change', (event) => {
         UnmixfileHandle = fileInput.files[0];
         const fileName = UnmixfileHandle.name;
         document.getElementById('file-name').textContent = `Selected File: ${fileName}`;
+        customLog('Selected File: ' + fileName);
         document.getElementById('read-csv').disabled = false;
+        
     }
 });
 
@@ -96,9 +100,11 @@ document.getElementById('read-csv').addEventListener('click', async () => {
             complete: function(results) {
                 csvArray = results.data;
                 console.log('CSV Array:', csvArray);
+                customLog('CSV Array:', csvArray);
                 ChannelNames = results.meta.fields;
                 ChannelNames = ChannelNames.slice(2);
                 console.log('ChannelNames:', ChannelNames);
+                customLog('ChannelNames:', ChannelNames);
                 // check if last row is empty
                 if (csvArray.length > 0 && Object.values(csvArray[csvArray.length - 1]).every(value => value === "")) {
                     csvArray.pop(); // remove last row
@@ -107,6 +113,7 @@ document.getElementById('read-csv').addEventListener('click', async () => {
                 A_Array = twoDimArray.map(row => row.slice(2).map(Number));//remove first two columns (primary and secondary labels)
                 A_Array = transpose(A_Array);
                 console.log('A_Array:', A_Array);
+                customLog('A_Array:', A_Array);
 
                 PSValueList = csvArray.map(row => {
                     const primaryValue = row[Object.keys(row)[0]];
@@ -126,6 +133,9 @@ document.getElementById('read-csv').addEventListener('click', async () => {
                 console.log('PSValueList:', PSValueList);
                 console.log('PrimaryValueList:', PrimaryValueList);
                 console.log('SecondaryValueList:', SecondaryValueList);
+                customLog('PSValueList:', PSValueList);
+                customLog('PrimaryValueList:', PrimaryValueList);
+                customLog('SecondaryValueList:', SecondaryValueList);
             }
         });
 
@@ -141,10 +151,13 @@ document.getElementById('read-csv').addEventListener('click', async () => {
         //calculate pinv matrix
         A_pinv = pinv(A_Array);
         console.log('A_pinv:', A_pinv);
-        let MultiplyMatrix = multiply(A_pinv, A_Array);
-        console.log('MultiplyMatrix:', MultiplyMatrix);
+        customLog('A_pinv:', A_pinv);
+        let MultiplyMatrix_I_pinv = multiply(A_pinv, A_Array);
+        console.log('MultiplyMatrix_I_pinv:', MultiplyMatrix_I_pinv);
+        customLog('MultiplyMatrix_I_pinv:', MultiplyMatrix_I_pinv);
     } catch (error) {
         console.error('Error reading CSV file:', error);
+        customLog('Error reading CSV file:', error);
     }
 });
 
@@ -204,6 +217,11 @@ function PosSigDropdown(data) {
         console.log('Selected Row Index:', selectedRowIndex);
         console.log('directoryHandle:', directoryHandle);
         
+        customLog('Selected Value:', selectedPSValue);
+        customLog('Selected Primary Value:', selectedPrimaryValue);
+        customLog('Selected Secondary Value:', selectedSecondaryValue);
+        customLog('Selected Row Index:', selectedRowIndex);
+        customLog('directoryHandle:', directoryHandle);
     });
 }
 
@@ -227,6 +245,7 @@ async function populateFileDropdown(directoryHandle) {
             if (entry.kind === 'file' && entry.name === selectedFileName) {
                 SCCfileHandle = entry;
                 document.getElementById('file-dropdown-name').textContent = `Selected File: ${SCCfileHandle.name}`;
+                customLog('Selected File: ' + SCCfileHandle.name);
                 document.getElementById('run-button').style.display = 'block';
                 document.getElementById('subset-method-selection').style.display = 'block';
                 break;
@@ -238,9 +257,11 @@ async function populateFileDropdown(directoryHandle) {
 // Read selected scc fcs file
 function findMaxColumnIndex(A_Array, selectedRowIndex) {
     console.log('selectedRowIndex:', selectedRowIndex);
+    customLog('selectedRowIndex:', selectedRowIndex);
     const A_Array_t = transpose(A_Array)
     const row = A_Array_t[selectedRowIndex];
     console.log('A_Array[selectedRowIndex]:', row);
+    customLog('A_Array[selectedRowIndex]:', row);
     let maxIndex = 0;
     let maxValue = row[0];
 
@@ -281,20 +302,24 @@ async function readFCSFile() {
             let maxColumnIndex = findMaxColumnIndex(A_Array, selectedRowIndex);
             let max_ChannelName = ChannelNames[maxColumnIndex]
             console.log("max_ChannelName: ", max_ChannelName); 
+            customLog("max_ChannelName: ", max_ChannelName);
             
             //import fcs file
             document.getElementById('file-reading-reminder-progress').innerText = '>---- import fcs file';
             let arrayBuffer = e.target.result;
-            console.log("arrayBuffer: ", arrayBuffer); 
+            //console.log("arrayBuffer: ", arrayBuffer); 
+            customLog("arrayBuffer: ", "finished. ");
             
             let buffer = Buffer.from(arrayBuffer);
             arrayBuffer = null //remove arrayBuffer
-            console.log("buffer: ", buffer); 
+            //console.log("buffer: ", buffer); 
+            customLog("buffer: ", "finished. ");
             
             document.getElementById('file-reading-reminder-progress').innerText = '>>--- extract dataset';
             let fcs = new FCS({ dataFormat: 'asNumber', eventsToRead: -1}, buffer);
             buffer = null //remove buffer
-            console.log("fcs: ", fcs); 
+            //console.log("fcs: ", fcs); 
+            customLog("fcs: ", "finished. ");
             
             // fcsColumnNames
             const text = fcs.text;
@@ -307,9 +332,10 @@ async function readFCSFile() {
             // fcsArray
             fcsArray = fcs.dataAsNumbers; 
             fcs = null; //remove fcs
-            console.log("fcsArray: ",fcsArray); 
+            //console.log("fcsArray: ",fcsArray); 
             console.log('Column Names:', fcsColumnNames);
-            
+            customLog("fcsArray: ", "finished. ");
+            customLog('Column Names:', fcsColumnNames);
 
             //check fcs size and do subset
             document.getElementById('file-reading-reminder-progress').innerText = '>>>-- subset dataset';
@@ -326,13 +352,19 @@ async function readFCSFile() {
                 document.getElementById('file-reading-worrying1').innerText = 'Note: the fcs file has too many cells (' + full_fcsArraylength + '), only ' + SubsetSize + ' cells are imported';
                 document.getElementById('file-reading-worrying2').innerText = 'Subset method: ' + SubsetMethod;
                 document.getElementById('file-reading-worrying3').innerText = 'Subset size: ' + SubsetSize;
+                customLog('Note: the fcs file has too many cells (' + full_fcsArraylength + '), only ' + SubsetSize + ' cells are imported');
+                customLog('Subset method: ' + SubsetMethod);
+                customLog('Subset size: ' + SubsetSize);
                 if(SubsetMethod == "peak_channel"){
                     document.getElementById('file-reading-worrying4').innerText = 'Peak channel: ' + max_ChannelName;
+                    customLog('Peak channel: ' + max_ChannelName);
                 }
                 document.getElementById('file-reading-worrying3').innerText = 'Subset size: ' + SubsetSize;
+                customLog('Subset size: ' + SubsetSize);
             } else {
                 document.getElementById('file-reading-worrying-div').style.display = 'block';
                 document.getElementById('file-reading-worrying').innerText = 'Note: all cells (' + full_fcsArraylength + ') are imported';
+                customLog('Note: all cells (' + full_fcsArraylength + ') are imported');
             }
             
             //filter fcsArray
@@ -340,17 +372,24 @@ async function readFCSFile() {
             var filteredfcsArrayforUnmix = filterFCSArrayByChannelNames(fcsArray, fcsColumnNames, ChannelNames);
             filteredfcsArrayforUnmix = transpose(filteredfcsArrayforUnmix);
             console.log('Filtered FCS Array:', filteredfcsArrayforUnmix);
+            customLog('Row number of Filtered FCS Array:', filteredfcsArrayforUnmix.length);
+            customLog('Column number of Filtered FCS Array:', filteredfcsArrayforUnmix[0].length);
             
             //Do unmixing
             document.getElementById('file-reading-reminder-progress').innerText = '>>>>> unmixing';
             let unmixedMatrix = multiply(A_pinv, filteredfcsArrayforUnmix);
             unmixedMatrix = transpose(unmixedMatrix);
             console.log('unmixedMatrix:', unmixedMatrix);
+            customLog('Row number of unmixedMatrix:', unmixedMatrix.length);
+            customLog('Column number of unmixedMatrix:', unmixedMatrix[0].length);
             // add unmixedMatrix back to fcsArray 
             fcsArray = mergeArraysHorizontally(fcsArray, unmixedMatrix);
             console.log('Merged fcsArray:', fcsArray);
+            customLog('Row number of Merged fcsArray:', fcsArray.length);
+            customLog('Column number of Merged fcsArray:', fcsArray[0].length);
             fcsColumnNames = fcsColumnNames.concat(PSValueList)
             console.log('Merged fcsColumnNames:', fcsColumnNames);
+            customLog('Merged fcsColumnNames:', fcsColumnNames);
 
             // change file-reading-reminder
             document.getElementById('file-reading-reminder-progress').style.display = 'none';
@@ -361,6 +400,7 @@ async function readFCSFile() {
         reader.readAsArrayBuffer(file);
     } else {
         console.error('No file selected');
+        customLog('No file selected');
     }
 }
 
@@ -420,11 +460,13 @@ function populateColumnDropdowns(dropdownelement_id,options) {
 document.getElementById('x-dropdown').addEventListener('change', function(event) {
     x_val = event.target.value;
     console.log('Selected x_val:', x_val);
+    customLog('Selected x_val:', x_val);
 });
 
 document.getElementById('y-dropdown').addEventListener('change', function(event) {
     y_val = event.target.value;
     console.log('Selected y_val:', y_val);
+    customLog('Selected y_val:', y_val);
 });
 
 // Create scatter plot
@@ -452,10 +494,13 @@ function generateSubset(fcsArrayInput,PlotCellSize){
         Plotset = getRandomSubset(fcsArrayInput, PlotCellSize, 123);
     } else if (fcsArray.length == 0){
         console.error('fcsArrayInput is empty');
+        customLog('fcsArrayInput is empty');
     } else {
         Plotset = fcsArrayInput
     }
     console.log('Subset Data:', Plotset); 
+    customLog('Row number of Subset Data:', Plotset.length);
+    customLog('Column number of Subset Data:', Plotset[0].length);
     return Plotset
 }
 
@@ -464,6 +509,7 @@ function createPlotset(fcsArrayPlotset,x_val,y_val,fcsColumnNames,enable_density
     const yIndex = fcsColumnNames.indexOf(y_val);
     if (xIndex === -1 || yIndex === -1) {
         console.error('Invalid column names');
+        customLog('Invalid column names');
         return;
     }
     var xData = fcsArrayPlotset.map(row => row[xIndex]);
@@ -525,6 +571,8 @@ function createPlotset(fcsArrayPlotset,x_val,y_val,fcsColumnNames,enable_density
             const selectedIndices = selectedPoints.map(point => point.pointIndex);
             selectedSubset_fcsArray = selectedIndices.map(index => fcsArrayPlotset[index]);
             console.log('Selected Subset:', selectedSubset_fcsArray);
+            customLog('Row number of Selected Subset:', selectedSubset_fcsArray.length);
+            customLog('Column number of Selected Subset:', selectedSubset_fcsArray[0].length);
             document.getElementById('selected-reminder').innerText = "Selected cell count: " + selectedPoints_count
         } catch (error) {
             document.getElementById('selected-reminder').innerText = "Selected cell count: 0";
@@ -561,6 +609,8 @@ class KernelDensityEstimator {
 document.getElementById('plot-button').addEventListener('click', async () => {
     PlotCellSize = document.getElementById('plotset-size-input').value
     fcsArrayPlotset = generateSubset(fcsArray,PlotCellSize)
+    x_val = document.getElementById('x-dropdown').value
+    y_val = document.getElementById('y-dropdown').value
     createPlotset(fcsArrayPlotset,x_val,y_val,fcsColumnNames,enable_density_plot);
     document.getElementById('replot-button').style.display = 'block';
     document.getElementById('set-positive-button').style.display = 'block';
@@ -570,6 +620,8 @@ document.getElementById('plot-button').addEventListener('click', async () => {
 
 // Re-plot with selected population
 document.getElementById('replot-button').addEventListener('click', async () => {
+    x_val = document.getElementById('x-dropdown').value
+    y_val = document.getElementById('y-dropdown').value
     createPlotset(selectedSubset_fcsArray,x_val,y_val,fcsColumnNames,enable_density_plot);
 }); 
 
@@ -578,6 +630,8 @@ document.getElementById('set-positive-button').addEventListener('click', async (
     try{
         positivefcsArray = selectedSubset_fcsArray
         console.log('positivefcsArray:', positivefcsArray);
+        customLog('Row number of positivefcsArray:', positivefcsArray.length);
+        customLog('Column number of positivefcsArray:', positivefcsArray[0].length);
         document.getElementById('set-positive-reminder').style.display = 'block';
         document.getElementById('set-positive-reminder').innerText = "A total of " + positivefcsArray.length + " cells are set as shifted positive population."
     } catch (error) {
@@ -590,6 +644,8 @@ document.getElementById('set-negative-button').addEventListener('click', async (
     try{
         negativefcsArray = selectedSubset_fcsArray
         console.log('negativefcsArray:', negativefcsArray);
+        customLog('Row number of negativefcsArray:', negativefcsArray.length);
+        customLog('Column number of negativefcsArray:', negativefcsArray[0].length);
         document.getElementById('set-negative-reminder').style.display = 'block';
         document.getElementById('set-negative-reminder').innerText = "A total of " + negativefcsArray.length + " cells are set as negative population."
     } catch (error) {
@@ -609,14 +665,18 @@ document.getElementById('calculation-button').addEventListener('click', async ()
         try {
             // calculate LefSig, medianPosValue
             console.log('Calculating Lefsig with positive and negative populations...');
+            customLog('Calculating Lefsig with positive and negative populations...');
             const result = LefSigCalculater(positivefcsArray,negativefcsArray,fcsColumnNames,PSValueList,selectedPSValue,A_Array);
             const { LefSig, medianPosValue } = result;
             console.log('LefSig: ',LefSig);
+            customLog('LefSig: ',LefSig);
             console.log('medianPosValue: ',medianPosValue);
+            customLog('medianPosValue: ',medianPosValue);
             // calculate RawSig
             const selectedColIndex = PSValueList.indexOf(selectedPSValue);
             RawSig = A_Array.map(row => row[selectedColIndex]);
             console.log('RawSig: ',RawSig);
+            customLog('RawSig: ',RawSig);
             document.getElementById('calculation-button-reminder').style.display = 'block';
             document.getElementById('calculation-button-reminder').innerText = "Calculation completed successfully.";
 
@@ -637,6 +697,7 @@ document.getElementById('calculation-button').addEventListener('click', async ()
 
         } catch (error) {
             console.error('Error during calculation:', error);
+            customLog('Error during calculation:', error);
             document.getElementById('calculation-button-reminder').style.display = 'block';
             document.getElementById('calculation-button-reminder').innerText = "An error occurred during calculation. Please try again.";
         }
@@ -646,8 +707,10 @@ document.getElementById('calculation-button').addEventListener('click', async ()
 document.getElementById('submit-factor-button').addEventListener('click', () => {
     CorrectFactor = parseFloat(document.getElementById('correct-factor-input').value);
     console.log('User entered Correct Factor: ', CorrectFactor);
+    customLog('User entered Correct Factor: ', CorrectFactor);
     A_Array_corrected = A_Array_corrected_calculater(A_Array,LefSig,CorrectFactor,PSValueList,selectedPSValue);
     console.log('A_Array_corrected: ', A_Array_corrected);
+    customLog('A_Array_corrected: ', A_Array_corrected);
     A_pinv_corrected = pinv(A_Array_corrected);
     // UnmixCorrected
     fcsArrayPlotset_corrected = UnmixCorrected(fcsArrayPlotset,fcsColumnNames,ChannelNames,A_pinv_corrected,PSValueList)
@@ -663,13 +726,13 @@ document.getElementById('submit-factor-button').addEventListener('click', () => 
 document.getElementById('corrected-x-dropdown').addEventListener('change', function(event) {
     x_val_corrected = event.target.value;
     console.log('Selected x_val_corrected:', x_val_corrected);
-    
+    customLog('Selected x_val_corrected:', x_val_corrected);
 });
 
 document.getElementById('corrected-y-dropdown').addEventListener('change', function(event) {
     y_val_corrected = event.target.value;
     console.log('Selected y_val_corrected:', y_val_corrected);
-    
+    customLog('Selected y_val_corrected:', y_val_corrected);
 });
 
 // Do unmix with A_pinv_corrected 
@@ -678,17 +741,25 @@ function UnmixCorrected(fcsArraySubset,fcsColumnNames,ChannelNames,A_pinv_correc
     var filteredfcsArrayforUnmix = filterFCSArrayByChannelNames(fcsArraySubset, fcsColumnNames, ChannelNames);
     filteredfcsArrayforUnmix = transpose(filteredfcsArrayforUnmix);
     console.log('Filtered FCS Array for UnmixCorrected:', filteredfcsArrayforUnmix);
+    customLog('Row number of Filtered FCS Array for UnmixCorrected:', filteredfcsArrayforUnmix.length);
+    customLog('Column number of Filtered FCS Array for UnmixCorrected:', filteredfcsArrayforUnmix[0].length);
     //Do unmixing
     let unmixedMatrix = multiply(A_pinv_corrected, filteredfcsArrayforUnmix);
     unmixedMatrix = transpose(unmixedMatrix);
     console.log('unmixedMatrix for UnmixCorrected:', unmixedMatrix);
+    customLog('Row number of unmixedMatrix for UnmixCorrected:', unmixedMatrix.length);
+    customLog('Column number of unmixedMatrix for UnmixCorrected:', unmixedMatrix[0].length);
     //remove previous unmixed results from fcsArraySubset
     const numSigs = PSValueList.length;
     fcsArraySubset = fcsArraySubset.map(row => row.slice(0, -numSigs));
     console.log('fcsArraySubset without previous unmixed results:', unmixedMatrix);
+    customLog('Row number of fcsArraySubset without previous unmixed results:', unmixedMatrix.length);
+    customLog('Column number of fcsArraySubset without previous unmixed results:', unmixedMatrix[0].length);
     // add unmixedMatrix back to fcsArraySubset 
     fcsArraySubset = mergeArraysHorizontally(fcsArraySubset, unmixedMatrix);
     console.log('Merged fcsArraySubset for UnmixCorrected:', fcsArraySubset);
+    customLog('Row number of Merged fcsArraySubset for UnmixCorrected:', fcsArraySubset.length);
+    customLog('Column number of Merged fcsArraySubset for UnmixCorrected:', fcsArraySubset[0].length);
 
     return fcsArraySubset
 }
@@ -697,8 +768,10 @@ function UnmixCorrected(fcsArraySubset,fcsColumnNames,ChannelNames,A_pinv_correc
 function A_Array_corrected_calculater(A_Array,LefSig,CorrectFactor,PSValueList,selectedPSValue) {
     const selectedColIndex = PSValueList.indexOf(selectedPSValue);
     console.log('selectedColIndex: ',selectedColIndex);
+    customLog('selectedColIndex: ',selectedColIndex);
     const LefSig_adjusted  = multiply(LefSig,CorrectFactor)
     console.log('LefSig_adjusted: ',LefSig_adjusted);
+    customLog('LefSig_adjusted: ',LefSig_adjusted);
     //add LefSig_adjusted to the column selectedColIndex of A_Array
     A_Array_corrected = A_Array.map((row, rowIndex) => {
         const newRow = [...row];
@@ -713,37 +786,49 @@ function LefSigCalculater(positivefcsArray,negativefcsArray,fcsColumnNames,PSVal
     //filter positivefcsArray and negativefcsArray with PSValueList
     const selectedIndices = PSValueList.map(value => fcsColumnNames.indexOf(value)).filter(index => index !== -1);
     console.log('selectedIndices: ',selectedIndices);
+    customLog('selectedIndices: ',selectedIndices);
     const filterArrayByIndices = (array, indices) => array.map(row => indices.map(index => row[index]));
 
     const filteredPositivefcsArray = filterArrayByIndices(positivefcsArray, selectedIndices);
     const filteredNegativefcsArray = filterArrayByIndices(negativefcsArray, selectedIndices);
     console.log('filteredPositivefcsArray: ',filteredPositivefcsArray);
+    customLog('Row number of filteredPositivefcsArray:', filteredPositivefcsArray.length);
+    customLog('Column number of filteredPositivefcsArray:', filteredPositivefcsArray[0].length);
     console.log('filteredNegativefcsArray: ',filteredNegativefcsArray);
+    customLog('Row number of filteredNegativefcsArray:', filteredNegativefcsArray.length);
+    customLog('Column number of filteredNegativefcsArray:', filteredNegativefcsArray[0].length);
 
     //transform positivefcsArray and negativefcsArray into matrix, which is posB and negB
     const posB = transpose(matrix(filteredPositivefcsArray));
     console.log('posB: ',posB);
+    customLog('Row and column number of posB:', posB._size);
     const negB = transpose(matrix(filteredNegativefcsArray));
     console.log('negB: ',negB);
+    customLog('Row and column number of negB:', negB._size);
     //calculate Median_negB with median operation
     const Median_negB = negB._data.map(row => median(row)); // Median along rows
     console.log('Median_negB: ',Median_negB);
+    customLog('Median_negB:', Median_negB);
     //calculate difB by subtract posB with Median_negB
     const difB = posB._data.map((row, rowIndex) => row.map(value => value - Median_negB[rowIndex]));
     console.log('difB: ',difB);
-
+    customLog('Row number of difB:', difB.length);
+    customLog('Column number of difB:', difB[0].length);
     //Set value of difB at row of selectedPSValue to be zero, which is lefB
     const selectedRowIndex = PSValueList.indexOf(selectedPSValue);
     var lefB = matrix(difB);
     medianPosValue = median(lefB._data[selectedRowIndex]);
     lefB._data[selectedRowIndex] = Array(lefB._size[1]).fill(0);
     console.log('lefB: ',lefB);
+    customLog('Row and column number of lefB:', lefB._size);
     //calculate lefR with lefB
     const lefR = multiply(A_Array, lefB);
     console.log('lefR: ',lefR);
+    customLog('Row and column number of lefR:', lefR._size);
     //calculate Median_lefR with median operation
     const Median_lefR = lefR._data.map(row => median(row));
     console.log('Median_lefR: ',Median_lefR);
+    customLog('Median_lefR: ',Median_lefR);
     //return Median_lefR, which is lefsig
     LefSig = Median_lefR;
     return { LefSig, medianPosValue };
@@ -751,6 +836,8 @@ function LefSigCalculater(positivefcsArray,negativefcsArray,fcsColumnNames,PSVal
 
 document.getElementById('corrected-plot-button').addEventListener('click', () => {
     // plot new scatter plot
+    x_val_corrected = document.getElementById('corrected-x-dropdown').value
+    y_val_corrected = document.getElementById('corrected-y-dropdown').value
     createCorrectedPlotset(fcsArrayPlotset_corrected,x_val_corrected,y_val_corrected,fcsColumnNames,enable_density_plot);
     document.getElementById('corrected-replot-button').style.display = 'block';
     // plot line chart
@@ -758,16 +845,20 @@ document.getElementById('corrected-plot-button').addEventListener('click', () =>
     // show save button
     csvArray_Output = replaceArrayColumns(csvArray, A_Array_corrected);
     console.log('csvArray_Output: ',csvArray_Output);
+    customLog('csvArray_Output: ',csvArray_Output);
     document.getElementById('save-button').style.display = 'block';
+    document.getElementById('export-log-button').style.display = 'block';
 });
 
 // Plot corrected scatter plot
 function createCorrectedPlotset(fcsArrayPlotset,x_val,y_val,fcsColumnNames,enable_density_plot) {
     console.log('fcsColumnNames: ',fcsColumnNames);
+    customLog('fcsColumnNames: ',fcsColumnNames);
     const xIndex = fcsColumnNames.indexOf(x_val);
     const yIndex = fcsColumnNames.indexOf(y_val);
     if (xIndex === -1 || yIndex === -1) {
         console.error('Invalid column names');
+        customLog('Invalid column names');
         return;
     }
     var xData = fcsArrayPlotset.map(row => row[xIndex]);
@@ -832,6 +923,8 @@ function createCorrectedPlotset(fcsArrayPlotset,x_val,y_val,fcsColumnNames,enabl
             const selectedIndices = selectedPoints.map(point => point.pointIndex);
             selectedSubset_fcsArray_corrected = selectedIndices.map(index => fcsArrayPlotset[index]);
             console.log('Selected Subset:', selectedSubset_fcsArray_corrected);
+            customLog('Row number of Selected Subset:', selectedSubset_fcsArray_corrected.length);
+            customLog('Column number of Selected Subset:', selectedSubset_fcsArray_corrected[0].length);
             document.getElementById('corrected-selected-reminder').innerText = "Selected cell count: " + selectedPoints_count
         } catch (error) {
             document.getElementById('corrected-selected-reminder').innerText = "Selected cell count: 0";
@@ -874,6 +967,8 @@ function PlotLineChart(RawSig,LefSig,CorrectFactor,ChannelNames,selectedPSValue)
 
 // Re-plot corrected scatter plot with selected population
 document.getElementById('corrected-replot-button').addEventListener('click', async () => {
+    x_val_corrected = document.getElementById('corrected-x-dropdown').value
+    y_val_corrected = document.getElementById('corrected-y-dropdown').value
     createCorrectedPlotset(selectedSubset_fcsArray_corrected,x_val_corrected,y_val_corrected,fcsColumnNames,enable_density_plot);
 }); 
 
@@ -920,6 +1015,25 @@ document.getElementById('save-button').addEventListener('click', () => {
 
     // Remove the link from the body
     document.body.removeChild(link);
+});
+
+
+function customLog(...args) {
+    const timestamp = new Date().toISOString(); // 获取当前时间的 ISO 字符串
+    const logEntry = `[${timestamp}] ${args.join(' ')}`;
+    logArray.push(logEntry);
+    console.log.apply(console, [logEntry]); 
+}
+
+document.getElementById('export-log-button').addEventListener('click', () => {
+    const logContent = logArray.join('\n');
+    const blob = new Blob([logContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'console_log.txt';
+    a.click();
+    URL.revokeObjectURL(url);
 });
 
 //npm run build
