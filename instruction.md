@@ -27,7 +27,7 @@ However, sadly, you find unmixing error, as shown above for on single-color cont
 
 In this case, UMO should perfactly address the issue by correct unmixing matrix with your single-color control cells.
 
-### 1. if you have no single-color control cells
+### 2. if you have no single-color control cells
 
 In this scenario, the unmixing matrix is extracted from single-color control beads. You have no single-color control cells. Or there are important change of experimental condition that makes the single-color control cells very different from your multi-color samples.
 

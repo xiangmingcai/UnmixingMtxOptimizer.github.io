@@ -324,8 +324,15 @@ async function readFCSFile() {
             // fcsColumnNames
             const text = fcs.text;
             const columnNames = [];
+            //columnNames are stored in `$P${i}S` in Xenith
             for (let i = 1; text[`$P${i}S`]; i++) {
                 columnNames.push(text[`$P${i}S`]);
+            }
+            //columnNames are stored in `$P${i}N` in Aurora
+            if (columnNames.length == 0) {
+                for (let i = 1; text[`$P${i}N`]; i++) {
+                    columnNames.push(text[`$P${i}N`]);
+                }
             }
             fcsColumnNames = columnNames;
             
