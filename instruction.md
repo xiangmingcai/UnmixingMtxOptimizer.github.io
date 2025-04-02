@@ -37,7 +37,6 @@ This issue is challenging to resolve because multiple fluors may contribute to i
 
 However, in practice, the UMO can still optimize the unmixing results, with small impact on other unmixed channels. So, give it a try! Just remember to check other channels afterward.
 
-
 ## Requirements
 
 **Operating System**: No requirment for Operating System. 
@@ -52,20 +51,28 @@ Internet connection is needed.
 
 ## Installation 
 
-No installation is needed. You could simply open the [Unmixing Matrix Optimizer](https://xiangmingcai.github.io/UnmixingOptimizer.github.io/) website and use it.
+No installation is needed. You could simply open the **[Unmixing Matrix Optimizer (UMO)](https://xiangmingcai.github.io/UnmixingOptimizer.github.io/)** website and use it.
 
 
 ## File preparation
 ### 1. Unmixing matrix file
-The unmixing matrix file contains the extracted signatures of fluors (and autofluorescence) in your experiment. 
+The unmixing matrix file contains the extracted signatures of fluors (and autofluorescence (AF)) in your experiment. 
 
-It should be saved as a **csv** file.
+In general, most spectrum cytometer instrument have embadded unmixing process, and users need to select single-color control populations for each fluor and AF. During these steps users are extracting signatures for each fluor and AF. These extracted signatures will be put together to be an unmixing matrix.
+
+However, these instrument may not allow users to export the extracted unmixing matrix. To obtain your unmixing matrix, users could export the raw single-color control fcs files, which include signals at each channel/detector. Then, users may use FCS Express, OMIQ or other flow analysis program to select populaitons and extract unmixing matrix. The unmixing matrix could be used to do unmixing for your multi-color samples in most flow analysis program, including FCS Express and OMIQ. 
+
+**To help you easily prepare your own unmixing matrix, we also delevoped an out-of-the-box webtool, [Unmixing Matrix Generater (UMG)](https://github.com/xiangmingcai/UmixingMtxGenerator.github.io). If you have all the single-color control fcs files ready, you should be able to use UMG to extract the unmixing matrix in 30 mins ~ 1h.**
+
+
 
 <p align="center">
   <img src="./images/UnmixingMatrixCSV.jpg" />
 </p>
 
-The format is exactly the same as the format from [OMIQ](https://www.omiq.ai/), if you copy matrix in Unmixing module.
+The unmixing matrix should be saved as a **csv** file.
+
+The format is exactly the same as the format from [OMIQ](https://www.omiq.ai/), if you copy matrix in Unmixing module. However, if you do not use OMIQ, it is also easy to prepare the file in excel and save as csv file
 
 <p align="center">
   <img src="./images/omiq.jpg" />
@@ -83,7 +90,9 @@ For the use of the webtool, it does not matter whether the signals are normalize
 
 ### 2. fcs file
 
-We are currently testing fcs files from various flow cytometers and will update when we have results.
+Raw fcs files exported from Aurora, Xenith, Fortessa, and CytPix are tested and supported by UMO and UMG.
+
+We are also testing other flow cytometers and will update when we have results.
 
 Ideally, the UMO should be able to handle the fcs file that you aquired directly from your flow cytometer. The fcs file should contain the raw data for each channel (detecter). Unmixed results, if any, should **not** be included in the fcs file.
 
@@ -233,5 +242,7 @@ You can also save the log for your experiment records. **Please note that UMO is
 ## Citation and Support
 
 If you find this tool helpful, please consider citing our work in your research. For more information, visit the GitHub project page.
+
+If you encounter any issues, feel free to report in the [github repository](https://github.com/xiangmingcai/UnmixingOptimizer.github.io/issues). 
 
 Thank you for your support! 😊
