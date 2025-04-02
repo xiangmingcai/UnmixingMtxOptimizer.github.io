@@ -15,4 +15,4 @@ Note: UMO is a static website, meaning everything you do with UMO is 100% local.
 - **author  : Xiangming Cai**
 - **email   : x.cai@amsterdamumc.nl**
 - **time    : 2025/4/1**
-- **version: demo v0.3**
+- **version: alpha v0.1**
