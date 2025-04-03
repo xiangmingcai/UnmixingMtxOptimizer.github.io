@@ -6,9 +6,9 @@ If you find it helpful, please remember to cite us in your work.
 
 Enjoy! 😉
 
-link to the webpage: [UMO](https://xiangmingcai.github.io/UnmixingOptimizer.github.io/)
+link to the webpage: [UMO](https://xiangmingcai.github.io/UnmixingMtxOptimizer.github.io/)
 
-link to the instruction: [instruction](https://github.com/xiangmingcai/UnmixingOptimizer.github.io/blob/main/instruction.md)
+link to the instruction: [instruction](https://github.com/xiangmingcai/UnmixingMtxOptimizer.github.io/blob/main/instruction.md)
 
 Note: UMO is a static website, meaning everything you do with UMO is 100% local.** No data is sent out, and we do not store any user information.
 
