@@ -7,7 +7,7 @@ Xiangming Cai
 
 Welcome to the Unmixing Matrix Optimizer, your go-to tool for correcting the unmixing matrix in flow cytometry analysis. This guide will help you understand how to use the tool.
 
-Visit the project in [Github](https://github.com/xiangmingcai/UnmixingOptimizer.github.io).
+Visit the project in [Github](https://github.com/xiangmingcai/UnmixingMtxOptimizer.github.io).
 
 
 ## Application scenario
@@ -51,7 +51,7 @@ Internet connection is needed.
 
 ## Installation 
 
-No installation is needed. You could simply open the **[Unmixing Matrix Optimizer (UMO)](https://xiangmingcai.github.io/UnmixingOptimizer.github.io/)** website and use it.
+No installation is needed. You could simply open the **[Unmixing Matrix Optimizer (UMO)](https://xiangmingcai.github.io/UnmixingMtxOptimizer.github.io/)** website and use it.
 
 
 ## File preparation
@@ -243,6 +243,6 @@ You can also save the log for your experiment records. **Please note that UMO is
 
 If you find this tool helpful, please consider citing our work in your research. For more information, visit the GitHub project page.
 
-If you encounter any issues, feel free to report in the [github repository](https://github.com/xiangmingcai/UnmixingOptimizer.github.io/issues). 
+If you encounter any issues, feel free to report in the [github repository](https://github.com/xiangmingcai/UnmixingMtxOptimizer.github.io/issues). 
 
 Thank you for your support! 😊
