@@ -2,7 +2,7 @@
 
 This webtool, UMO, as a part of [Unmixing Matrix Online web Toolkit for flow cytometry (UMOT)](https://github.com/xiangmingcai/UMOT), is designed to correct the unmixing matrix using single color control samples or multi-color samples for flow cytometry analysis.
 
-If you find it helpful, please remember to cite us in your work.
+If you find it helpful, please remember to cite the [UMOT project](https://github.com/xiangmingcai/UMOT) in your work.
 
 Enjoy! 😉
 
