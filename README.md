@@ -12,7 +12,7 @@ link to the instruction: [instruction](https://github.com/xiangmingcai/UnmixingM
 
 Note: UMO is a static website, meaning everything you do with UMO is 100% local.** No data is sent out, and we do not store any user information.
 
-- **author  : Xiangming Cai**
-- **email   : x.cai@amsterdamumc.nl**
-- **time    : 2025/4/6**
-- **version: v1.0**
+- author  : Xiangming Cai; Sara Sarcia Garcia; Juan J. Garcia Vallejo
+- email   : x.cai@amsterdamumc.nl
+- time    : 2025/4/6
+- version: v1.0
