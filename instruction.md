@@ -70,7 +70,7 @@ However, these instrument may not allow users to export the extracted unmixing m
   <img src="./images/UnmixingMatrixCSV.jpg" />
 </p>
 
-The unmixing matrix should be saved as a **csv** file.
+The unmixing matrix should be saved as a **csv** file. If you do not have an unmixing matrix, you may use the [Unmixing Matrix Generator (UMG)](https://github.com/xiangmingcai/UnmixingMtxGenerator.github.io/tree/main) or [Unmixing Matrix Recover (UMR)](https://github.com/xiangmingcai/UnmixingMtxRecover.github.io/tree/main) from our UMOT toolkit.
 
 The format is exactly the same as the format from [OMIQ](https://www.omiq.ai/), if you copy matrix in Unmixing module. However, if you do not use OMIQ, it is also easy to prepare the file in excel and save as csv file
 
