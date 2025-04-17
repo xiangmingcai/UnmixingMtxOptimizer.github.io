@@ -9,7 +9,7 @@
 <body>
     <div class="basic-div">
         <h1>Unmixing Matrix Optimizer</h1>
-        <p>(version 1.0)</p>
+        <p>(version 1.1)</p>
         <p>This website is designed to correct the unmixing matrix in flow cytometry analysis. </p>
         <p>For optimal results, we recommend using single-color control samples. However, correction with multi-color samples is also possile.</p>
         <p>If you find this tool helpful, please remember to cite us in your work. <a href="https://github.com/xiangmingcai/UnmixingOptimizer.github.io" target="_blank">View this project on GitHub</a></p>
@@ -132,6 +132,11 @@
     <!-- Step 4 Save corrected Unmixing matrix -->
     <div class="basic-div">
         <h2>Step 4 Save corrected Unmixing matrix</h2>
+        <div class = "table-container">
+            <div id="csv-table-optimized" style="display: none;"></div>
+        </div>
+        <button id="copy-button">Copy Table</button>
+        <p id="copy-button-reminder"></p>
         <button id="save-button" style="display: none;">Save Corrected Unmixing matrix</button>
         <button id="export-log-button" style="display: none;">Save log</button>
     </div>

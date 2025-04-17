@@ -140,11 +140,12 @@ document.getElementById('read-csv').addEventListener('click', async () => {
         });
 
         //show csvArray
-        displayCSVTable(csvArray);
+        displayCSVTable(csvArray,'csv-table');
 
         //show sccsig-dropdown-select
         document.getElementById('csv-dropdown').style.display = 'block';
         PosSigDropdown(csvArray);
+
 
         //show "sccsig-dropdown-select-reminder
         document.getElementById('sccsig-dropdown-select-reminder').style.display = 'block';
@@ -162,7 +163,7 @@ document.getElementById('read-csv').addEventListener('click', async () => {
 });
 
 // Display unmixing matrix csv file
-function displayCSVTable(data) {
+function displayCSVTable(data,ElementId) {
     const table = document.createElement('table');
     const headerRow = document.createElement('tr');
 
@@ -186,8 +187,8 @@ function displayCSVTable(data) {
     });
 
     // Append table to the div
-    document.getElementById('csv-table').innerHTML = '';
-    document.getElementById('csv-table').appendChild(table);
+    document.getElementById(ElementId).innerHTML = '';
+    document.getElementById(ElementId).appendChild(table);
 }
 
 // Show Dropdown to select positive signature
@@ -204,7 +205,8 @@ function PosSigDropdown(data) {
     populateFileDropdown(directoryHandle);
     document.getElementById('file-dropdown-select-alert').style.display = 'block';
     document.getElementById('file-dropdown').style.display = 'block';
-    selectedRowIndex = document.getElementById('file-dropdown').value
+
+    selectedRowIndex = document.getElementById('csv-dropdown').value
 
     dropdown.addEventListener('change', (event) => {
         selectedRowIndex = event.target.value;
@@ -348,6 +350,7 @@ async function readFCSFile() {
             document.getElementById('file-reading-reminder-progress').innerText = '>>>-- subset dataset';
             SubsetSize = parseInt(document.getElementById('subset-size').value, 10);
             let full_fcsArraylength = fcsArray.length
+            customLog("full_fcsArraylength: ",full_fcsArraylength);
             if (full_fcsArraylength > SubsetSize){
                 if (SubsetMethod == "random") {
                     fcsArray = generateSubset(fcsArray,SubsetSize)
@@ -370,7 +373,7 @@ async function readFCSFile() {
                 customLog('Subset size: ' + SubsetSize);
             } else {
                 document.getElementById('file-reading-worrying-div').style.display = 'block';
-                document.getElementById('file-reading-worrying').innerText = 'Note: all cells (' + full_fcsArraylength + ') are imported';
+                document.getElementById('file-reading-worrying3').innerText = 'Note: all cells (' + full_fcsArraylength + ') are imported';
                 customLog('Note: all cells (' + full_fcsArraylength + ') are imported');
             }
             
@@ -719,6 +722,19 @@ document.getElementById('submit-factor-button').addEventListener('click', () => 
     console.log('A_Array_corrected: ', A_Array_corrected);
     customLog('A_Array_corrected: ', A_Array_corrected);
     A_pinv_corrected = pinv(A_Array_corrected);
+
+    let A_Array_corrected_for_display = transpose(A_Array_corrected);
+    let csvArray_optimized = csvArray.map(obj => Object.values(obj));
+    const csvArraycolumnNames = Object.keys(csvArray[0]);
+    customLog('csvArraycolumnNames: ', csvArraycolumnNames);
+    
+    // replace the selectedRowIndex row of the third column to last column of csvArray_optimized with the selectedRowIndex row of A_Array_corrected_for_display
+    
+    for (let colIndex = 2; colIndex < csvArray_optimized[0].length; colIndex++) {
+        csvArray_optimized[selectedRowIndex][colIndex] = A_Array_corrected_for_display[selectedRowIndex][colIndex];
+    }
+    csvArray_optimized.unshift(csvArraycolumnNames);
+    displayCSVTable(csvArray_optimized,'csv-table-optimized');
     // UnmixCorrected
     fcsArrayPlotset_corrected = UnmixCorrected(fcsArrayPlotset,fcsColumnNames,ChannelNames,A_pinv_corrected,PSValueList)
     // Show x_val_corrected and y_val_corrected
@@ -853,6 +869,7 @@ document.getElementById('corrected-plot-button').addEventListener('click', () =>
     csvArray_Output = replaceArrayColumns(csvArray, A_Array_corrected);
     console.log('csvArray_Output: ',csvArray_Output);
     customLog('csvArray_Output: ',csvArray_Output);
+    document.getElementById('csv-table-optimized').style.display = 'block';
     document.getElementById('save-button').style.display = 'block';
     document.getElementById('export-log-button').style.display = 'block';
 });
@@ -1024,9 +1041,30 @@ document.getElementById('save-button').addEventListener('click', () => {
     document.body.removeChild(link);
 });
 
+document.getElementById('copy-button').addEventListener('click', () => {
+    const table = document.getElementById('csv-table-optimized');
+    const range = document.createRange();
+    range.selectNode(table);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    try {
+        const successful = document.execCommand('copy');
+        const msg = successful ? 'successful' : 'unsuccessful';
+        console.log('Copy table command was ' + msg);
+        document.getElementById('copy-button-reminder').innerText = 'Copy table command was ' + msg;
+    } catch (err) {
+        console.error('Oops, unable to copy. ', err);
+        document.getElementById('copy-button-reminder').innerText = 'Oops, unable to copy. ' + err;
+    }
+
+    selection.removeAllRanges();
+});
+
 
 function customLog(...args) {
-    const timestamp = new Date().toISOString(); // 获取当前时间的 ISO 字符串
+    const timestamp = new Date().toISOString(); 
     const logEntry = `[${timestamp}] ${args.join(' ')}`;
     logArray.push(logEntry);
     console.log.apply(console, [logEntry]); 
