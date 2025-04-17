@@ -12,6 +12,11 @@ link to the instruction: [instruction](https://github.com/xiangmingcai/UnmixingM
 
 Note: UMO is a static website, meaning everything you do with UMO is 100% local.** No data is sent out, and we do not store any user information.
 
+
+# Update log
+
+- 2025-04-17  v1.1 1.display optimized unmixing matrix; 2.add copy table function.
+
 <br>
 
 - author : Xiangming Cai; Sara Garcia Garcia; Juan J. Garcia Vallejo
